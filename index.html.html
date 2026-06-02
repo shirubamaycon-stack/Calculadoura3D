@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Custo 3D</title>
+
+<!-- PWA / instalação no iPhone (tela inicial) -->
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Custo 3D">
+<meta name="theme-color" content="#1a1410">
+
+<!-- Ícone do app (embutido, não precisa de arquivo externo) -->
+<link rel="apple-touch-icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 180 180'%3E%3Crect width='180' height='180' rx='40' fill='%231a1410'/%3E%3Ctext x='90' y='78' font-size='64' text-anchor='middle' fill='%23ff5d5d' font-family='Georgia,serif' font-weight='700'%3E¥%3C/text%3E%3Ctext x='90' y='132' font-size='38' text-anchor='middle' fill='%23f5a623' font-family='Arial' font-weight='700'%3E3D%3C/text%3E%3C/svg%3E">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap');
+
+  :root {
+    --ink: #1a1410;
+    --paper: #fdf6ec;
+    --card: #fffaf3;
+    --coral: #ff5d5d;
+    --coral-deep: #e23e3e;
+    --grape: #6c4ad6;
+    --mint: #1fb98c;
+    --gold: #f5a623;
+    --line: #e8dcc8;
+    --muted: #8a7a64;
+    --shadow: 8px 8px 0 rgba(26,20,16,0.9);
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'Outfit', -apple-system, 'Helvetica Neue', sans-serif;
+    background: var(--paper);
+    background-image:
+      radial-gradient(circle at 12% 18%, rgba(255,93,93,0.08) 0, transparent 30%),
+      radial-gradient(circle at 88% 78%, rgba(108,74,214,0.08) 0, transparent 32%);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: calc(24px + env(safe-area-inset-top)) 16px calc(60px + env(safe-area-inset-bottom));
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  .wrap { max-width: 760px; margin: 0 auto; }
+
+  header { text-align: center; margin-bottom: 28px; }
+  .badge {
+    display: inline-block;
+    background: var(--ink);
+    color: var(--gold);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+  h1 {
+    font-family: 'Fraunces', serif;
+    font-size: clamp(30px, 7vw, 46px);
+    font-weight: 600;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+  h1 em { color: var(--coral); font-style: italic; }
+  .sub { color: var(--muted); font-size: 14px; margin-top: 8px; }
+
+  .card {
+    background: var(--card);
+    border: 2.5px solid var(--ink);
+    border-radius: 20px;
+    box-shadow: var(--shadow);
+    padding: 24px 22px;
+    margin-bottom: 22px;
+  }
+  .card h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 19px;
+    font-weight: 600;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+  }
+  .card .hint { font-size: 12.5px; color: var(--muted); margin-bottom: 18px; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+
+  .field { margin-bottom: 16px; }
+  .field:last-child { margin-bottom: 0; }
+  .field label {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  .field .note { font-weight: 400; color: var(--muted); font-size: 11.5px; }
+  .inputrow { position: relative; display: flex; align-items: center; }
+  input[type="number"] {
+    width: 100%;
+    font-family: 'Outfit', sans-serif;
+    font-size: 17px;
+    font-weight: 500;
+    padding: 12px 52px 12px 14px;
+    border: 2px solid var(--line);
+    border-radius: 12px;
+    background: #fff;
+    color: var(--ink);
+    transition: border-color .15s, box-shadow .15s;
+    -moz-appearance: textfield;
+  }
+  input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+  input:focus { outline: none; border-color: var(--coral); box-shadow: 0 0 0 3px rgba(255,93,93,0.15); }
+  .unit {
+    position: absolute;
+    right: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 600;
+    pointer-events: none;
+  }
+
+  .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 520px) { .grid2 { grid-template-columns: 1fr; } }
+
+  details.adv { margin-top: 4px; }
+  details.adv summary {
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--grape);
+    list-style: none;
+    padding: 8px 0;
+    user-select: none;
+  }
+  details.adv summary::-webkit-details-marker { display: none; }
+  details.adv summary::before { content: '▸ '; }
+  details.adv[open] summary::before { content: '▾ '; }
+
+  /* result */
+  .result {
+    background: var(--ink);
+    color: var(--paper);
+    border-radius: 20px;
+    padding: 26px 24px;
+    box-shadow: var(--shadow);
+  }
+  .result h2 { font-family: 'Fraunces', serif; color: var(--gold); font-size: 18px; margin-bottom: 18px; }
+  .breakdown { display: flex; flex-direction: column; gap: 2px; margin-bottom: 18px; }
+  .brow {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 11px 0; border-bottom: 1px solid rgba(253,246,236,0.13);
+    font-size: 14.5px;
+  }
+  .brow .lbl { display: flex; align-items: center; gap: 9px; color: #e8dccb; }
+  .brow .val { font-weight: 600; font-variant-numeric: tabular-nums; }
+  .total {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-top: 8px; padding-top: 14px;
+  }
+  .total .lbl { font-size: 15px; font-weight: 600; }
+  .total .big {
+    font-family: 'Fraunces', serif;
+    font-size: 42px; font-weight: 700; color: var(--coral);
+    font-variant-numeric: tabular-nums; letter-spacing: -0.02em;
+  }
+  .total .big small { font-size: 19px; color: var(--paper); font-family: 'Outfit'; font-weight: 600; }
+
+  /* pricing suggestion */
+  .price-card { margin-top: 22px; }
+  .price-card h2 { display: flex; align-items: center; gap: 9px; }
+  .margin-row {
+    display: flex; align-items: center; gap: 12px;
+    margin: 14px 0 18px;
+  }
+  .margin-row label { font-size: 13px; font-weight: 600; white-space: nowrap; }
+  .margin-row input[type="range"] { flex: 1; accent-color: var(--mint); height: 6px; }
+  .margin-val {
+    font-weight: 700; font-size: 15px; color: var(--mint);
+    min-width: 48px; text-align: right; font-variant-numeric: tabular-nums;
+  }
+  .sale {
+    display: flex; justify-content: space-between; align-items: baseline;
+    background: #effaf5; border: 2px solid var(--mint); border-radius: 14px;
+    padding: 16px 18px;
+  }
+  .sale .lbl { font-size: 14px; font-weight: 600; color: #0f7257; }
+  .sale .amt {
+    font-family: 'Fraunces', serif; font-weight: 700; font-size: 32px; color: var(--mint);
+    font-variant-numeric: tabular-nums;
+  }
+  .profit { font-size: 12.5px; color: var(--muted); margin-top: 10px; text-align: center; }
+
+  .install-box {
+    background: #fffaf3;
+    border: 2.5px dashed var(--grape);
+    border-radius: 18px;
+    padding: 18px 20px;
+    margin-top: 22px;
+    font-size: 13.5px;
+  }
+  .install-box strong { display: block; font-size: 15px; margin-bottom: 10px; font-family: 'Fraunces', serif; }
+  .install-box ol { margin: 0; padding-left: 20px; }
+  .install-box li { margin-bottom: 6px; color: #4a3d2c; }
+  .install-box b { color: var(--grape); }
+
+  footer { text-align: center; font-size: 11.5px; color: var(--muted); margin-top: 26px; line-height: 1.7; }
+  footer a { color: var(--grape); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="badge">Kanto · 関東</span>
+    <h1>Calculadora de <em>Custo</em><br>de Impressão 3D</h1>
+    <p class="sub">Descubra o custo real de cada peça e quanto cobrar · Bambu Lab P1S</p>
+  </header>
+
+  <!-- INPUTS -->
+  <div class="card">
+    <h2><span class="dot" style="background:var(--coral)"></span>Dados da impressão</h2>
+    <p class="hint">Preencha com os dados do seu último print (o Bambu Studio mostra tempo e gramas estimados).</p>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Tempo de impressão <span class="note">(horas)</span></label>
+        <div class="inputrow">
+          <input type="number" id="hours" value="4" min="0" step="0.25">
+          <span class="unit">h</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Filamento usado <span class="note">(gramas)</span></label>
+        <div class="inputrow">
+          <input type="number" id="grams" value="45" min="0" step="1">
+          <span class="unit">g</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Preço do filamento <span class="note">(por kg)</span></label>
+        <div class="inputrow">
+          <input type="number" id="kgprice" value="2500" min="0" step="50">
+          <span class="unit">¥/kg</span>
+        </div>
+      </div>
+      <div class="field">
+        <label>Custo da embalagem <span class="note">(por peça)</span></label>
+        <div class="inputrow">
+          <input type="number" id="packaging" value="80" min="0" step="10">
+          <span class="unit">¥</span>
+        </div>
+      </div>
+    </div>
+
+    <details class="adv">
+      <summary>Ajustes avançados (energia · falhas · mão de obra)</summary>
+      <div style="padding-top:14px">
+        <div class="grid2">
+          <div class="field">
+            <label>Tarifa de energia <span class="note">TEPCO Kanto</span></label>
+            <div class="inputrow">
+              <input type="number" id="kwhprice" value="36.6" min="0" step="0.1">
+              <span class="unit">¥/kWh</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Consumo da impressora <span class="note">P1S ≈ 0,12</span></label>
+            <div class="inputrow">
+              <input type="number" id="power" value="0.12" min="0" step="0.01">
+              <span class="unit">kWh/h</span>
+            </div>
+          </div>
+        </div>
+        <div class="grid2">
+          <div class="field">
+            <label>Taxa de falha <span class="note">prints perdidos</span></label>
+            <div class="inputrow">
+              <input type="number" id="failrate" value="8" min="0" max="90" step="1">
+              <span class="unit">%</span>
+            </div>
+          </div>
+          <div class="field">
+            <label>Mão de obra <span class="note">acabamento, etc.</span></label>
+            <div class="inputrow">
+              <input type="number" id="labor" value="0" min="0" step="50">
+              <span class="unit">¥</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </details>
+  </div>
+
+  <!-- RESULT -->
+  <div class="result">
+    <h2>◆ Custo da peça</h2>
+    <div class="breakdown">
+      <div class="brow">
+        <span class="lbl"><span class="dot" style="background:var(--coral)"></span>Filamento</span>
+        <span class="val" id="r-fil">—</span>
+      </div>
+      <div class="brow">
+        <span class="lbl"><span class="dot" style="background:var(--gold)"></span>Energia elétrica</span>
+        <span class="val" id="r-energy">—</span>
+      </div>
+      <div class="brow">
+        <span class="lbl"><span class="dot" style="background:var(--grape)"></span>Embalagem</span>
+        <span class="val" id="r-pack">—</span>
+      </div>
+      <div class="brow">
+        <span class="lbl"><span class="dot" style="background:var(--mint)"></span>Mão de obra</span>
+        <span class="val" id="r-labor">—</span>
+      </div>
+      <div class="brow">
+        <span class="lbl"><span class="dot" style="background:#b5a48c"></span>Margem de falhas</span>
+        <span class="val" id="r-fail">—</span>
+      </div>
+    </div>
+    <div class="total">
+      <span class="lbl">Custo total</span>
+      <span class="big" id="r-total">¥0</span>
+    </div>
+  </div>
+
+  <!-- PRICING -->
+  <div class="card price-card">
+    <h2><span class="dot" style="background:var(--mint)"></span>Quanto cobrar?</h2>
+    <p class="hint">Defina o markup sobre o custo. Itens comuns 50–100%; peças exclusivas, temáticas ou de alta demanda podem ir a 150–200%.</p>
+    <div class="margin-row">
+      <label>Markup</label>
+      <input type="range" id="margin" min="0" max="200" value="100" step="5">
+      <span class="margin-val" id="margin-val">100%</span>
+    </div>
+    <div class="sale">
+      <span class="lbl">Preço de venda sugerido</span>
+      <span class="amt" id="r-sale">¥0</span>
+    </div>
+    <p class="profit" id="r-profit">Lucro por peça: —</p>
+  </div>
+
+  <div class="install-box" id="install-box">
+    <strong>📲 Instalar na tela inicial do iPhone</strong>
+    <ol>
+      <li>Abra este arquivo no <b>Safari</b></li>
+      <li>Toque no botão <b>Compartilhar</b> (quadrado com seta ↑)</li>
+      <li>Escolha <b>"Adicionar à Tela de Início"</b></li>
+      <li>Toque em <b>Adicionar</b> — pronto, vira um app! 🎉</li>
+    </ol>
+  </div>
+
+  <footer>
+    Tarifa padrão: TEPCO 従量電灯B ≈ 36,6 ¥/kWh (faixa 120–300 kWh, com imposto).<br>
+    Funciona offline depois de instalado. Os cálculos ficam só no seu aparelho.<br>
+    <strong>シルバ 3D</strong> · ferramenta interna
+  </footer>
+</div>
+
+<script>
+  const ids = ['hours','grams','kgprice','packaging','kwhprice','power','failrate','labor','margin'];
+  const $ = id => document.getElementById(id);
+  const yen = n => '¥' + Math.round(n).toLocaleString('ja-JP');
+
+  function calc() {
+    const hours    = parseFloat($('hours').value)    || 0;
+    const grams    = parseFloat($('grams').value)    || 0;
+    const kgprice  = parseFloat($('kgprice').value)  || 0;
+    const pack     = parseFloat($('packaging').value)|| 0;
+    const kwh      = parseFloat($('kwhprice').value) || 0;
+    const power    = parseFloat($('power').value)    || 0;
+    const fail     = parseFloat($('failrate').value) || 0;
+    const labor    = parseFloat($('labor').value)    || 0;
+    const margin   = parseFloat($('margin').value)   || 0;
+
+    const cFil    = (grams / 1000) * kgprice;
+    const cEnergy = hours * power * kwh;
+    const cPack   = pack;
+    const cLabor  = labor;
+
+    const baseSub = cFil + cEnergy + cPack + cLabor;
+    const cFail   = baseSub * (fail / 100);
+    const total   = baseSub + cFail;
+
+    $('r-fil').textContent    = yen(cFil);
+    $('r-energy').textContent = yen(cEnergy);
+    $('r-pack').textContent   = yen(cPack);
+    $('r-labor').textContent  = yen(cLabor);
+    $('r-fail').textContent   = yen(cFail);
+    $('r-total').innerHTML    = yen(total);
+
+    // sale price by markup over cost: sale = cost * (1 + markup)
+    const mk = margin / 100;
+    const sale = total * (1 + mk);
+    const profit = sale - total;
+    $('margin-val').textContent = margin + '%';
+    $('r-sale').textContent = yen(sale);
+    const realMargin = sale > 0 ? (profit / sale * 100) : 0;
+    $('r-profit').textContent = 'Lucro: ' + yen(profit) + '  ·  custo ' + yen(total) + '  ·  margem real ' + realMargin.toFixed(0) + '%';
+  }
+
+  ids.forEach(id => $(id).addEventListener('input', calc));
+  calc();
+
+  // Esconde as instruções de instalação quando já está rodando como app na tela inicial
+  if (window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches) {
+    const box = document.getElementById('install-box');
+    if (box) box.style.display = 'none';
+  }
+</script>
+</body>
+</html>
